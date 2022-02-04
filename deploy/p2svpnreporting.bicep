@@ -4,12 +4,19 @@ param resourceLocation string = resourceGroup().location
 @description('function project name')
 param functionProjectName string
 
+@description('function project name')
+param p2sGwName string
+
+@description('function project name')
+param p2sGwResourceGroup string
+
 var MGstorageAccountName = 'mg${functionProjectName}${uniqueString(resourceGroup().id)}'
 var APstorageAccountName = 'ap${functionProjectName}${uniqueString(resourceGroup().id)}'
 var hostingPlanName = 'apphp${functionProjectName}${uniqueString(resourceGroup().id)}'
 var appInsightsName = 'appin${functionProjectName}${uniqueString(resourceGroup().id)}'
 var functionAppName = 'app${functionProjectName}'
 var keyVaultName = 'kv${functionProjectName}'
+var secretNameP2svpnstatsconn = 'secp2svpnstatsconn'
 //Key Vault
 resource r_keyVault 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
   name: keyVaultName
@@ -40,7 +47,7 @@ resource r_keyVault 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     ]
   }
   resource secret 'secrets' = {
-    name: 'p2svpnstatsconn'
+    name: secretNameP2svpnstatsconn
     properties: {
       value: 'DefaultEndpointsProtocol=https;AccountName=${r_mgmntStorageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(r_mgmntStorageAccount.id, r_mgmntStorageAccount.apiVersion).keys[0].value}'
     }
@@ -129,16 +136,25 @@ resource r_functionApp 'Microsoft.Web/sites@2020-06-01' = {
           name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
           value: 'DefaultEndpointsProtocol=https;AccountName=${r_storageAccountAppService.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(r_storageAccountAppService.id, r_storageAccountAppService.apiVersion).keys[0].value}'
         }
-        // WEBSITE_CONTENTSHARE will also be auto-generated - https://docs.microsoft.com/en-us/azure/azure-functions/functions-app-settings#website_contentshare
-        // WEBSITE_RUN_FROM_PACKAGE will be set to 1 by func azure functionapp publish
         {
-          name: 'example tag'
-          value: 'val'
+          name: 'kvName'
+          value: keyVaultName
+        }
+        {
+          name: 'secretNameP2svpnstatsconn'
+          value: secretNameP2svpnstatsconn
+        }
+        {
+          name: 'p2sgwResourceGroup'
+          value: p2sGwResourceGroup
+        }
+        {
+          name: 'p2sGwName'
+          value: p2sGwName
         }
       ]
     }
   }
-
   dependsOn: []
   resource webconfig 'config@2021-02-01' = {
     name: 'web'

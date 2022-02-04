@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "11450567597884859382"
+      "templateHash": "11583259514974100528"
     }
   },
   "parameters": {
@@ -21,6 +21,18 @@
       "metadata": {
         "description": "function project name"
       }
+    },
+    "p2sGwName": {
+      "type": "string",
+      "metadata": {
+        "description": "function project name"
+      }
+    },
+    "p2sGwResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "function project name"
+      }
     }
   },
   "functions": [],
@@ -30,13 +42,14 @@
     "hostingPlanName": "[format('apphp{0}{1}', parameters('functionProjectName'), uniqueString(resourceGroup().id))]",
     "appInsightsName": "[format('appin{0}{1}', parameters('functionProjectName'), uniqueString(resourceGroup().id))]",
     "functionAppName": "[format('app{0}', parameters('functionProjectName'))]",
-    "keyVaultName": "[format('kv{0}', parameters('functionProjectName'))]"
+    "keyVaultName": "[format('kv{0}', parameters('functionProjectName'))]",
+    "secretNameP2svpnstatsconn": "secp2svpnstatsconn"
   },
   "resources": [
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
       "apiVersion": "2021-04-01-preview",
-      "name": "[format('{0}/{1}', variables('keyVaultName'), 'p2svpnstatsconn')]",
+      "name": "[format('{0}/{1}', variables('keyVaultName'), variables('secretNameP2svpnstatsconn'))]",
       "properties": {
         "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('MGstorageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('MGstorageAccountName')), '2021-06-01').keys[0].value)]"
       },
@@ -183,8 +196,20 @@
               "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('APstorageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('APstorageAccountName')), '2021-06-01').keys[0].value)]"
             },
             {
-              "name": "example tag",
-              "value": "val"
+              "name": "kvName",
+              "value": "[variables('keyVaultName')]"
+            },
+            {
+              "name": "secretNameP2svpnstatsconn",
+              "value": "[variables('secretNameP2svpnstatsconn')]"
+            },
+            {
+              "name": "p2sgwResourceGroup",
+              "value": "[parameters('p2sGwResourceGroup')]"
+            },
+            {
+              "name": "p2sGwName",
+              "value": "[parameters('p2sGwName')]"
             }
           ]
         }
